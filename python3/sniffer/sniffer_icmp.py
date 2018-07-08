@@ -1,8 +1,8 @@
 '''
 	Made By Sai Harsha Kottapalli
 	Tested on python3
-	About	: 	Sniffer,scanner
-	Use	 	:	Serves as a UDP Host discovery Tool on network. 
+	About	: 	Sniffer,decoding ICMP
+	Use	 	:	Sdecode ICMP responses from out sniffer. 
 '''
 
 import os
@@ -10,9 +10,6 @@ import socket
 import sys
 import struct
 import argparse
-import time
-from netaddr import IPNetwork,IPAddress
-from threading import *
 from ctypes import *
 
 # IP header
@@ -64,32 +61,16 @@ class ICMP(Structure):
     def __init__(self, socket_buffer):
         pass
 
-def udp_sender(subnet, msg):
-	time.sleep(5)
-	sender = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-	for ip in IPNetwork(subnet):
-		try:
-			sender.sendto(msg.encode("utf-8"), (str(ip), 65210))
-		except:
-			print("Exception encountered in udp_sender")
-			
-	print("UDP packets sent successfully")
-
 def main():
-	parser = argparse.ArgumentParser(description = "Sniffer,scanner")
+	parser = argparse.ArgumentParser(description = "Sniffer,decoding ICMP")
 	parser.add_argument("--host",action="store",dest="host_",help="host to listen on")
-	parser.add_argument("-s",action="store",dest="subnet",help="subnet to target")
 	results = parser.parse_args()
 
-	if results.host_ is None or results.subnet is None:
+	if results.host_ is None:
 		parser.print_help()
 		exit(0)
 
 	host = results.host_
-	subnet = results.subnet
-
-	#string to be searched
-	msg = "yolo!" 
 
 	# raw socket
 	if os.name == "nt":
@@ -107,9 +88,6 @@ def main():
 	if os.name == "nt":
 		sniffer.ioctl(socket.SIO_RCVALL, socket.RCVALL_ON)
 
-	# send packets
-	t = Thread(target=udp_sender, args=(subnet, msg))
-	t.start()
 
 	try:
 		while True:
@@ -118,8 +96,7 @@ def main():
 			# get IP header from the first 20 bytes
 			iph = IP(raw_buffer[0:20])
 			
-			#uncomment to check protocols and hosts
-			#print("[*]Protocol: {0} {1} to{2}".format(iph.protocol, iph.src_address, iph.dst_address))
+			print("[*]Protocol: {0} {1} to{2}".format(iph.protocol, iph.src_address, iph.dst_address))
 
 			if iph.protocol == "ICMP":
 				# find where ICMP packet starts
@@ -129,15 +106,7 @@ def main():
 				# ICMP structure
 				icmph = ICMP(buff) #ICMP header
 
-				#uncomment to check values
-				#print("[*]ICMP -> Type: {0} Code: {1}".format(icmph.type, icmph.code))
-
-				if icmph.code == 3 and icmph.type == 3:
-					# verify host is target subnet
-					if IPAddress(iph.src_address) in IPNetwork(subnet):
-						# check for message
-						if raw_buffer[len(raw_buffer)-len(msg):] == msg.encode("utf-8"):
-							print("Host Active: {0}".format(ip_header.src_address))
+				print("[*]ICMP -> Type: {0} Code: {1}".format(icmph.type, icmph.code))
 
 
 	except KeyboardInterrupt:
