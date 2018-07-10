@@ -31,9 +31,10 @@ class IP(Structure):
 		("dst",c_ulong)
 	]
 
+	#form structure
 	def __new__(self, socket_buffer=None):
 		return self.from_buffer_copy(socket_buffer)
-
+	#human readable output
 	def __init__(self, socket_buffer=None):
 		# ascii:protocol constants
 		self.protocol_map = {1:"ICMP", 6:"TCP", 17:"UDP"}
@@ -57,10 +58,10 @@ class ICMP(Structure):
         ("unused", c_ushort),
         ("next_hop_mtu", c_ushort)
     ]
-
+    
     def __new__(self, socket_buffer):
         return self.from_buffer_copy(socket_buffer)
-
+    
     def __init__(self, socket_buffer):
         pass
 
@@ -127,11 +128,12 @@ def main():
 				buffer_ = raw_buffer[offset:offset + sizeof(ICMP)]
 
 				# ICMP structure
-				icmph = ICMP(buff) #ICMP header
+				icmph = ICMP(buffer_) #ICMP header
 
 				#uncomment to check values
 				#print("[*]ICMP -> Type: {0} Code: {1}".format(icmph.type, icmph.code))
 
+				#port unreachable and destination unreachable respectively
 				if icmph.code == 3 and icmph.type == 3:
 					# verify host is target subnet
 					if IPAddress(iph.src_address) in IPNetwork(subnet):
