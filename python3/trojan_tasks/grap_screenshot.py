@@ -18,22 +18,22 @@ left_side=win32api.GetSystemMetrics(win32con.SM_XVIRTUALSCREEN)
 top_side=win32api.GetSystemMetrics(win32con.SM_YVIRTUALSCREEN)
 
 #device context
-desktop_dc=win32gui.GetWindowDC(h_desktop)
-img_dc=win32ui.CreateDCFromHandle(desktop_dc)
+context_desktop=win32gui.GetWindowDC(h_desktop)
+context_image=win32ui.CreateDCFromHandle(context_desktop)
 
-#momory based device context
-mem_dc=img_dc.CreateCompatibleDC()
+#memory based device context
+mem_dc=context_image.CreateCompatibleDC()
 
-screenshot=win32ui.CreateBitmap()
-screenshot.CreateCompatibleBitmap(img_dc,width,height)
-mem_dc.SelectObject(screenshot)
+ss=win32ui.CreateBitmap() #screenshot
+ss.CreateCompatibleBitmap(context_image,width,height)
+context_memory.SelectObject(ss)
 
 #copy the screen
-mem_dc.BitBlt((0,0),(width,height),img_dc,(left_side,top_side),win32con.SRCCOPY)
+context_memory.BitBlt((0,0),(width,height),context_image,(left_side,top_side),win32con.SRCCOPY)
 
 #save
-screenshot.SaveBitmapFile(mem_dc,'G:\\Temp\\screenshot.bmp')
+ss.SaveBitmapFile(context_memory,'G:\\Temp\\screenshot.bmp')
 
 #free
-mem_dc.DeleteDC()
-win32gui.DeleteObject(screenshot.GetHandle())
+context_memory.DeleteDC()
+win32gui.DeleteObject(ss.GetHandle())
