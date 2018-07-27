@@ -1,5 +1,4 @@
 '''
-	Made By Sai Harsha Kottapalli
 	Tested on python3
 	About	: 	image finder, face recognition
 	Use	 	:	Get image files and detect faces from pcap
